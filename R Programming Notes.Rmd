@@ -1,0 +1,1004 @@
+---
+title: "Learning Notes"
+author: "Zhang Zhang"
+date: "1/18/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Types
+
+## vector and list
+list defined by list() while normal vector is defined by using c(). but in vector, all objects must be the same data type. when you use c(), it will automatically covert objects to the same data types
+
+```{r}
+x<-c(1,"a")
+class(x)
+y<-list(1,"a",TRUE,c(1,2,3))
+class(y)
+as.numeric(x)
+```
+
+## matrix
+
+matrix is constructed by columns. First fill out column by column. You could also use cbind to create matrix
+
+```{r }
+m<-matrix(1:6,nrow=2,ncol=3)
+dim(m)
+attributes(m)
+
+x<-1:3
+y<-2:4
+cbind(x,y)
+```
+
+## Factors
+
+Factors are used to represent categorical data.The order of the levels can be set using the levels
+```{r}
+x<-factor(c("yes","no","yes"))
+x
+table(x)
+unclass(x)
+
+x<-factor(c("yes","no","yes"),levels=c("yes","no"))
+```
+
+## Missing value
+
+NA and NAN also have a class also. There are integer NA or character NA
+```{r}
+x<-c(1,2,NA,10,3)
+is.na(x)
+is.nan(x)
+
+```
+
+
+## DataFrame
+DataFrame column could contain different data types. each column is a list. It has row.names and can be converted to matrix by data.matrix(). it is filled column by column too. see the example.
+
+```{r}
+x<-data.frame(foo=1:4, bar=c(T,T,F,F)) 
+```
+
+
+## Names
+vector, list (names(x)<-c(...)) and matrix (dimnames(m)<-list(c(...),c(...)) all can have names.
+
+# Reading Data
+
+## Read Tabular data
+
+read.table, read.csv
+readLines
+source 
+dget
+load
+unserialize
+
+write.table
+writeLines
+dump
+dput
+save
+serialize
+
+## Read larger dataset
+
+pre-define the colClasses
+```{r}
+#initial<-read.table("datatable.txt",nrows=100)
+#classes<-sapply(initial,class)
+#tabAll<-read.table("datatable.txt",colClasses = classes)
+```
+
+## Textual Formats
+dumping and dputing are useful b/c the resulting texutal format is editable, and in the case of corruption, potentially recoverable. Textual format is quite good. Downside is the format is not very space-efficient.
+
+## dput and dump
+dput (dget) vs dump (source); dump could save multiple objects.
+
+## Interface with Outside World
+file, opens a connection to a file
+gzfile, gzip
+bzfile, bzip2
+url, opens a connection to a webpage
+
+
+# Subsetting
+
+[] - always return an object of the same class as the original
+[[]] - used to extract elements of a list or a data frame; 
+$ - extract elements of a list or data frame by name;
+
+```{r}
+x<-1:10
+x[1]
+x[1:4]
+x[x>5]
+u<-x>5
+x[u]
+```
+```{r}
+x<-list(foo=1:4,bar=0.6, baz="hello")
+x[1] #return list too b/c single bracket 
+class(x[1])
+x[[1]]
+class(x[[1]])
+x$bar
+x[["bar"]]
+x["bar"] # returns a list
+
+x[c(1,3)]
+
+```
+```{r}
+x<-list(a=list(10,12,14),b=c(3.14,2.81))
+x[[c(1,3)]] #1st element, 3rd in the first element
+x[[1]][[3]]
+x[[c(2,1)]]
+```
+```{r}
+x<-matrix(1:6,2,3)
+x
+x[1,2]
+x[1,]
+x[1,,drop=FALSE] # want to return a matrix
+
+```
+## Remove NA values
+```{r}
+x<-c(1,2,NA,4,NA,5)
+bad<-is.na(x)
+x[!bad]
+
+#using complete cases for multiple objects
+x<-c(1,2,NA,4,5,6)
+y<-c("a","b",NA,"d",NA,"f")
+good<-complete.cases(x,y)
+good
+x[good]
+y[good]
+```
+```{r}
+airquality[1:6,]
+good<-complete.cases(airquality)
+airquality[good,][1:6,]
+```
+## Vectorized Operation
+matrix multiplication
+```{r}
+x<-matrix(1:4,2,2)
+y<-matrix(rep(10,4),2,2)
+x
+y
+x*y
+x %*% y
+```
+## function of paste()
+```{r}
+paste(1:3,c("A","B","C"),sep = "-") # sep makes it separate string
+paste(1:3,c("A","B"),collapse = " ") # Collapse make it as one string
+```
+
+## NA, NaN, Inf
+The reason you got a vector of all NAs is that NA is not really a value, but just a placeholder for a quantity that is not
+available. Therefore the logical expression is incomplete and R has no choice but to return a vector of the same length as my_data that contains all NAs.
+
+
+## Subsetting Vectors -- excercise
+
+Index vectors come in four different flavors -- logical vectors, vectors of positive integers, vectors of negative integers, and
+vectors of character strings
+
+Logical e.g. x[!is.na(x)&x>0]
+Integers e.g. x[c(-2,-10)]   exclude index 2 and 10
+
+## Matrice and DataFrame -- excercise
+attributes() is an very important function
+dim(my_vector)<-c(4,5)
+
+Combining the character vector with our matrix of numbers caused everything to be enclosed in double quotes. This means we're left with a matrix of character strings, which is no good.
+cbind(patients,my_matrix)
+Then we can use the dataframe to solve the problem:
+my_data<-data.frame(patients,my_matrix)
+colnames(my_data)<-cnames
+
+
+
+# Control Structures and Functions
+
+Functions in R are "first class objects", which means that they can be treated much like any other R object. Functions can be passed as arguements to other functions; Functions can be nested, so you can define a function inside another function.
+
+The ... arguement indicate a variable number of arguments that are usually passed on to other functions. ... is often used when extending another function and you don't want to copy the entire argument of the original function
+
+## Scoping Rules
+
+R tries to bind a value to a symbol:
+
+```{r}
+search()
+```
+The order of the packages on the search list matters. User can configure it. 
+The scoping rules for R are the main feature that make it different from the original S language. R uses lexical scoping or static scoping. Lexical scoping simplifies statistical computing. 
+
+Lexical scoping in R means that: the values of free variables are searched for in the environment in which the function was defined. Environment: An environment is a collection of symbol and value pairs. every environment has a parent environment. function+environment=function closure. 
+
+R can have functions defined inside other functions (C doesn't allow you to do it). With lexical scoping
+
+```{r}
+y<-10
+f<-function(x){
+  y<-2
+  y^2+g(x)
+}
+g<-function(x){
+  x*y
+}
+f(3)
+```
+With lexicol scoping, the value of y in the function g is looked in the environment in which the function was defined. In this case the gloable environment, so the value of y is 10.
+
+With dynamic scoping, the value of y is look up in the environment from which the function was called. In R, the calling environment is known as the parent frame. so the value is 2. 
+
+Application: Optimization
+
+When writing software which does optimization, it may be desirable to allow the user to hold certain parameters fixed. Optimization functions in R minimize functions, so you need to use the negative log-likelihood
+
+```{r}
+make.NegLogLik<-function(data,fixed=c(FALSE,FALSE)){
+  params<-fixed
+  function(p){
+    params[!fixed]<-p
+    mu<-params[1]
+    sigma<-params[2]
+    a<- -0.5*length(data)*log(2*pi*sigma^2)
+    b<- -0.5*sum((data-mu)^2)/(sigma^2)
+    -(a+b)
+  }
+  
+}
+set.seed(1);normals<-rnorm(100,1,2)
+nLL<-make.NegLogLik(normals)
+ls(environment(nLL))
+
+optim(c(mu=0,sigma=1),nLL)$par
+
+#fix sigma
+nLL<-make.NegLogLik(normals,c(FALSE,2))
+optimize(nLL,c(-1,3))$minimum
+
+#fix mu
+nLL<-make.NegLogLik(normals,c(1,FALSE))
+optimize(nLL,c(1e-6,10))$minimum
+
+#graph
+nLL<-make.NegLogLik(normals,c(1,FALSE))
+x<-seq(1.7,1.9,len=100)
+y<-sapply(x,nLL)
+plot(x,exp(-(y-min(y))),type = "l")
+```
+
+# Date and Time
+
+- Dates are represented by the Date class
+- Times are represented by the POSIXct or the POSIXlt class
+- Dates are stored internally as the number of days since 1970-01-01
+
+```{r}
+x<-as.Date("1970-1-1")
+x
+unclass(x)
+unclass(as.Date("1970-1-2"))
+```
+- POSIXct is juat a very large interger
+- POSIXlt is a list stores a bunch of other useful information like the day of the week, day of the year etc.
+
+there are generic functions: weekdays(); months(); quarters()
+
+```{r}
+x<-Sys.time()
+x
+p<-as.POSIXlt(x)
+names(unclass(p))
+p$sec
+p$year
+```
+- strptime()
+
+```{r}
+datestring<-c("January 10, 2012 10:40","December 9, 2011 9:10")
+x<-strptime(datestring,"%B %d, %Y %H:%M")
+x
+```
+You cannot mix classes. one is date class and one is POSIXlt class
+
+```{r}
+x<-as.Date("2012-01-01")
+y<-strptime("January 10, 2012 10:40","%B %d, %Y %H:%M")
+as.POSIXlt(x)-y
+
+difftime(Sys.time(),y,units = "days") #can be used to control difference unit
+```
+We can use "Lubridate" or "zoo" to handle the date and time
+
+
+# Loop Functions
+
+## lapply()
+It will coerce the x to a list lapply(x,fun,...) sapply is simplifying lapply's results.
+
+## apply()
+Less typing. apply(x,margin,fun,...) is most often used to apply a function to a matrix. margin is the dimension you want to preserve.
+```{r}
+x<-matrix(rnorm(200),20,10)
+apply(x,2,mean)
+```
+rowSums=apply(x,1,sum) consider using rowSums b/c it is faster
+
+```{r}
+x<-matrix(rnorm(200),20,10)
+apply(x,1,quantile,probs=c(0.25,0.75))
+```
+
+## mapply()
+mapply(FUN,...,MoreArgs=Null, SIMPLIFY=TRUE,USE.NAMES=TRUE) is a multivariate apply of sorts which applies a function in parallel over a set of arguement
+
+```{r}
+#list(rep(1,4),rep(2,3),rep(3,2),rep(4,1))
+mapply(rep,1:4,4:1)
+```
+
+## tapply()
+
+tapply(x, INDEX, FUN,...SIMPLIFY=TRUE) is used to apply a function over subsets of a vector
+
+```{r}
+x<-c(rnorm(10),runif(10),rnorm(10,1))
+f<-gl(3,10) #factor
+f
+tapply(x,f,mean)
+```
+
+
+## split()
+
+split(x,f,drop=TRUE) takes a vector or other objects and split it into groups determined by a factor or list of factors
+```{r}
+x<-c(rnorm(10),runif(10),rnorm(10,1))
+f<-gl(3,10)
+split(x,f)
+lapply(split(x,f),mean)
+```
+
+```{r}
+library(datasets)
+head(airquality)
+s<-split(airquality,airquality$Month)
+lapply(s,function(x) colMeans(x[,c("Ozone","Solar.R","Wind")]))
+```
+
+split on more than one level
+```{r}
+x<-rnorm(10)
+f1<-gl(2,5)
+f2<-gl(5,2)
+f1
+f2
+interaction(f1,f2) 
+```
+```{r}
+str(split(x,list(f1,f2),drop=TRUE)) #split has arguement called drop=TRUE
+```
+
+# Debugging
+
+- message
+- warning
+- error
+- condition
+
+Tools to debug a program
+
+- traceback
+- debug: flags a function for "debug"
+- browser: suspends the execution of a function wherever it is called
+- trace: allows you to insert debugging code into a function
+- recover: allow you to modify the error behavior so that you can browse the function call stack
+
+```{r}
+mean(x)
+traceback()
+```
+```{r}
+#debug(lm)
+#lm(y~x)
+```
+
+# str Function
+
+Super important function in R. str refers structure
+```{r}
+str(ls)
+x<-rnorm(100,2,4)
+summary(x)
+str(x)
+f<-gl(40,10)
+str(f)
+```
+# Simulation
+d for density, r for rv generator, p for cumulative, q for quantile
+- rnorm()
+- rpois()
+- dnorm()
+- pnorm()
+
+linear model simulation
+```{r}
+set.seed(20)
+x<-rnorm(100)
+e<-rnorm(100,0,2)
+y<-0.5+2*x+e
+plot(x,y)
+```
+simulate random sampling
+```{r}
+set.seed(1)
+sample(1:10,4) #sample without replacement
+```
+
+
+# Profiling R
+
+Rprof()
+summaryRprof()
+
+
+# Functional Programming with purrr
+
+## 1. Map functions
+The map family of functions applies a function to the elements of a data structure, usually a list or a vector. The function is
+evaluated once for each element of the vector with the vector element as the first argument to the function. The return value is the same kind if data structure (a list or vector) but with every element replaced by the result of the function being evaluated with the corresponding element as the argument to the function.
+
+- map_char
+- map_lgl
+- map_if
+- map_at
+
+multi-dimension
+
+- map2_char()
+```{r}
+#map2_char(letters,1:26,paste)
+```
+
+## 2. Reduce Functions
+Where mapping returns a vector or a list, reducing should return a single value
+
+- reduce
+- reduce_right
+- has_element
+- detect
+- detect_index
+
+## 3. Filter functions
+- keep
+- discard
+- every
+- some
+
+- partial Partial application of functions can allow functions to behave a little like data structures. Using the partial() function from the purrr package you can specify some of the arguments of a function, and then partial() will return a function that only takes the unspecified arguments.
+- walk If you want to evaluate a function across a data structure you should use the walk() function from purrr. Use walk() across the vector called mark_antony with the message function.
+
+
+# Getting and Cleaning Data
+
+## 1. dplyr
+
+One unique aspect of dplyr is that the same set of tools allow you to work with tabular data from a variety of sources, including
+data frames, data tables, databases and multidimensional arrays. In this lesson, we'll focus on data frames, but everything you
+learn will apply equally to other formats.
+
+The main advantage to using a tbl_df over a regular data frame is the printing.
+
+"The dplyr philosophy is to have small functions that each do one thing well." Specifically, dplyr supplies five 'verbs' that cover most fundamental data manipulation tasks:
+
+- select
+- filter
+- arrange
+- mutate
+- summarize
+
+## select 
+
+select a subset of columns
+- select(cran,r_arch:country)
+- select(cran,ip_id,package,country)
+- select(cran,-time)
+- select(cran,-(X:size))
+
+## filter
+select a subset of rows : Excel Filtering
+- filter(cran, package == "swirl")
+- filter(cran, r_version == "3.1.1", country =="US")
+- filter(cran, r_version <= "3.0.2", country =="IN")
+- filter(cran, country == "US" | country == "IN")
+- filter(cran,!is.na(r_version))
+
+## arrange
+arange rows and columns : Excel sorting
+- arrange(cran2,ip_id) ascending order
+- arrange(cran2,desc(ip_id))
+- arrange(cran2, package, ip_id) ascedening order by package first, then ip_id
+- arrange(cran2, country, desc(r_version),ip_id)
+
+## mutate
+It's common to create a new variable based on the value of one or more variables already in a dataset. Excel function
+- mutate(cran3,size_mb = size/2^20)
+- mutate(cran3,size_mb=size/2^20,size_gb=size_mb/2^10)
+
+## summarize
+summarize(), collapses the dataset to a single row.
+- summarize(cran,avg_bytes=mean(size))
+
+# Grouping and Chaining with dplyr
+
+- by_package<-group_by(cran,package)
+```{r}
+#pack_sum <- summarize(by_package,
+#                      count = n(),
+#                      unique = n_distinct(ip_id),
+#                      countries = n_distinct(country) ,
+#                      avg_bytes = mean(size) )
+```
+
+- quantile(pack_sum$count,probs=0.99)
+- top_counts<-filter(pack_sum, count > 679)
+- View(top_counts)
+- top_counts_sorted<-arrange(top_counts,desc(count))
+
+Chaining:
+```{r}
+# result3 <-
+#   cran %>%
+#   group_by(package) %>%
+#   summarize(count = n(),
+#             unique = n_distinct(ip_id),
+#             countries = n_distinct(country),
+#             avg_bytes = mean(size)
+#   ) %>%
+#   filter(countries > 60) %>%
+#   arrange(desc(countries), avg_bytes)
+
+# Print result to console
+#print(result3)
+```
+
+# Tidy Data (SUPER IMPORTANT AND NOT EASY TO UNDERSTAND WELL)
+
+| Tidy data is formatted in a standard way that facilitates exploration and analysis and works seamlessly with other tidy data
+| tools. Specifically, tidy data satisfies three conditions:
+| 
+| 1) Each variable forms a column
+| 
+| 2) Each observation forms a row
+| 
+| 3) Each type of observational unit forms a table
+
+
+- gather() NEEDS MORE EXAMPLES
+- separate()
+- parse_number()   in library(readr)
+```{r}
+# students2 %>%
+#   gather( sex_class,count ,-grade ) %>%
+#   separate( sex_class, c("sex", "class")) %>%
+#   print
+# 
+# 
+# students3 %>%
+#   gather(class, grade, class1:class5, na.rm = TRUE) %>%
+#   spread(test,grade) %>%
+#   print
+# 
+# students3 %>%
+#   gather(class, grade, class1:class5, na.rm = TRUE) %>%
+#   spread(test, grade) %>%
+#   mutate(class=parse_number(class)) %>%
+#   print
+# 
+# sat %>%
+#   select(-contains("total")) %>%
+#   gather(part_sex, count, -score_range) %>%
+#   separate(part_sex, c("part", "sex")) %>%
+#   group_by(part,sex) %>%
+#   mutate(total=sum(count),
+#          prop=count/total
+#   ) %>% print
+```
+- bind_rows()  dplyr function
+
+
+# Deal with Date and Time with Lubridate
+- today()
+- year(), month(), day()
+- wday(,label=TRUE)
+- now(), hour(), mimnite(), second()
+
+Fortunately, lubridate offers a variety of functions for parsing date-times. These functions take the form of ymd(), dmy(), hms(),  ymd_hms(), etc., where each letter in the name of the function stands for the location of years (y), months (m), days (d), hours (h), minutes (m), and/or seconds (s) in the date-time being read in
+
+lubridate is also capable of handling vectors of dates, which is particularly helpful when you need to parse an entire column of
+data.
+
+- update(this_moment,hours=8,minutes=34,seconds=55)
+- nyc<-now(tzone="America/New_York")
+- depart<-nyc+days(2)
+- depart<-update(depart,hours=17,minutes=34)
+- arrive<-depart+hours(15)+minutes(50)
+- arrive<-with_tz(arrive,tzone = "Asia/Hong_Kong")
+- last_time<-mdy("June 17, 2008",tz="Singapore")
+- how_long<-interval(last_time,arrive)
+- as.period(how_long)
+
+To address these complexities, the authors of lubridate introduce four classes of time related objects: instants, intervals,
+durations, and periods.
+
+- stopwatch()
+
+
+
+# Wrangle Data
+
+## Tibble
+```{r}
+as_tibble(iris)
+tibble(
+  x = 1:5, 
+  y = 1, 
+  z = x ^ 2 + y
+)
+tribble(  # transpose tibble - used for data entries
+  ~x, ~y, ~z,
+  #--|--|----
+  "a", 2, 3.6,
+  "b", 1, 8.5
+)
+```
+
+- Subsetting
+So far all the tools you’ve learned have worked with complete data frames. If you want to pull out a single variable, you need some new tools, $ and [[. [[ can extract by name or position; $ only extracts by name but is a little less typing.
+
+basically, use dplyr is the best solution. 
+
+- Data Import
+* read_csv() reads comma delimited files, read_csv2() reads semicolon separated files (common in countries where , is used as the decimal place), read_tsv() reads tab delimited files, and read_delim() reads in files with any delimiter.
+* read_fwf() reads fixed width files. You can specify fields either by their widths with fwf_widths() or their position with fwf_positions(). read_table() reads a common variation of fixed width files where columns are separated by white space.
+* read_log() reads Apache style log files. (But also check out webreadr which is built on top of read_log() and provides many more helpful tools.)
+
+Example: read_csv() from readr
+- You can use skip = n to skip the first n lines; or use comment = "#" to drop all lines that start with (e.g.) 
+- col_names = FALSE or col_names = c()
+- na = "."
+- When string contains ",", use quote
+```{r}
+read_csv("x,y\n1,'a,b'",quote="''")
+```
+
+## Parsing a vector
+
+Learn how to use parse_*(vector to be parsed, na="") functions
+```{r}
+parse_integer(c("1", "231", ".", "456"), na = ".")
+
+x <- parse_integer(c("123", "345", "abc", "123.45"))
+problems(x)
+```
+- parse_logical() and parse_integer() parse logicals and integers respectively. There’s basically nothing that can go wrong with these parsers so I won’t describe them here further.
+
+- parse_double() is a strict numeric parser, and parse_number() is a flexible numeric parser. These are more complicated than you might expect because different parts of the world write numbers in different ways.
+
+- parse_character() seems so simple that it shouldn’t be necessary. But one complication makes it quite important: character encodings.
+
+- parse_factor() create factors, the data structure that R uses to represent categorical variables with fixed and known values.
+
+- parse_datetime(), parse_date(), and parse_time() allow you to parse various date & time specifications. These are the most complicated because there are so many different ways of writing dates.
+
+## Parse Numbers
+
+ppl write numbers in different ways, 10%, 1,000,000, 1.000.000, $1000
+readr has the notion of a "locale".
+
+```{r}
+parse_double("1.23")
+parse_double("1,23", locale = locale(decimal_mark = ","))
+```
+
+parse_number() addresses the second problem: it ignores non-numeric characters before and after the number. This is particularly useful for currencies and percentages, but also works to extract numbers embedded in text.
+
+```{r}
+parse_number("$100")
+parse_number("20%")
+parse_number("It cost $123")
+```
+```{r}
+# Used in America
+parse_number("$123,456,789")
+
+# Used in many parts of Europe
+parse_number("123.456.789", locale = locale(grouping_mark = "."))
+
+# Used in Switzerland
+parse_number("123'456'789", locale = locale(grouping_mark = "'"))
+```
+
+## Strings
+
+Each hexadecimal number represents a byte of information: 48 is H, 61 is a, and so on. The mapping from hexadecimal number to character is called the encoding, and in this case the encoding is called ASCII. ASCII does a great job of representing English characters, because it’s the American Standard Code for Information Interchange.UTF-8 can encode just about every character used by humans today, as well as many extra symbols (like emoji!).
+
+readr uses UTF-8 everywhere: it assumes your data is UTF-8 encoded when you read it, and always uses it when writing. 
+```{r}
+charToRaw("Hadley")
+```
+```{r}
+x1 <- "El Ni\xf1o was particularly bad this year"
+x2 <- "\x82\xb1\x82\xf1\x82\xc9\x82\xbf\x82\xcd"
+parse_character(x1, locale = locale(encoding = "Latin1"))
+parse_character(x2, locale = locale(encoding = "Shift-JIS"))
+```
+readr provides guess_encoding() to help you figure it out.
+```{r}
+guess_encoding(charToRaw(x1))
+guess_encoding(charToRaw(x2))
+```
+
+## Factors
+R uses factors to represent categorical variables that have a known set of possible values. Give parse_factor() a vector of known levels to generate a warning whenever an unexpected value is present:
+```{r}
+fruit <- c("apple", "banana")
+parse_factor(c("apple", "banana", "bananana"), levels = fruit)
+```
+But if you have many problematic entries, it’s often easier to leave as character vectors and then use the tools you’ll learn about in strings and factors to clean them up.
+
+## Dates, date-times and times
+parse_datetime() expects an ISO8601 date-time. ISO8601 is an international standard in which the components of a date are organised from biggest to smallest: year, month, day, hour, minute, second.
+parse_date() expects a four digit year, a - or /, the month, a - or /, then the day:
+parse_time() expects the hour, :, minutes, optionally : and seconds, and an optional am/pm specifier:
+
+## Parsing a file
+it reads the first 1000 rows and uses some (moderately conservative) heuristics to figure out the type of each column. You can emulate this process with a character vector using guess_parser(), which returns readr’s best guess, and parse_guess() which uses that guess to parse the column:
+```{r}
+guess_parser("2010-10-01")
+str(parse_guess("2010-10-10"))
+```
+
+These defaults don’t always work for larger files. There are two basic problems:
+* The first thousand rows might be a special case, and readr guesses a type that is not sufficiently general.
+* The column might contain a lot of missing values. If the first 1000 rows contain only NAs, readr will guess that it’s a logical vector
+
+```{r}
+challenge <- read_csv(readr_example("challenge.csv"))
+```
+```{r}
+problems(challenge)
+```
+```{r}
+tail(challenge)
+```
+
+```{r}
+challenge <- read_csv(
+  readr_example("challenge.csv"), 
+  col_types = cols(
+    x = col_double(),
+    y = col_date()
+  )
+)
+tail(challenge)
+```
+
+I highly recommend always supplying col_types, building up from the print-out provided by readr. This ensures that you have a consistent and reproducible data import script. If you rely on the default guesses and your data changes, readr will continue to read it in. If you want to be really strict, use stop_for_problems(): that will throw an error and stop your script if there are any parsing problems.
+
+In the previous example, we just got unlucky: if we look at just one more row than the default, we can correctly parse in one shot:
+```{r}
+challenge2 <- read_csv(readr_example("challenge.csv"), guess_max = 1001)
+```
+Sometimes it’s easier to diagnose problems if you just read in all the columns as character vectors:This is particularly useful in conjunction with type_convert()
+```{r}
+challenge2 <- read_csv(readr_example("challenge.csv"), 
+  col_types = cols(.default = col_character())
+)
+type_convert(challenge2)
+```
+
+
+
+If you’re reading a very large file, you might want to set n_max to a smallish number like 10,000 or 100,000. That will accelerate your iterations while you eliminate common problems.
+
+If you’re having major parsing problems, sometimes it’s easier to just read into a character vector of lines with read_lines(), or even a character vector of length 1 with read_file(). Then you can use the string parsing skills you’ll learn later to parse more exotic formats.
+
+## Writing to a file
+readr also comes with two useful functions for writing data back to disk: write_csv() and write_tsv()
+Note that the type information is lost when you save to csv,This makes CSVs a little unreliable for caching interim results—you need to recreate the column specification every time you load in. There are two alternatives:
+- 1. write_rds() and read_rds() are uniform wrappers around the base functions readRDS() and saveRDS(). These store data in R’s custom binary format called RDS:
+
+- 2.The feather package implements a fast binary file format that can be shared across programming languages:
+```{r}
+library(feather)
+write_feather(challenge, "challenge.feather")
+read_feather("challenge.feather")
+```
+
+## Other types of data
+To get other types of data into R, we recommend starting with the tidyverse packages listed below.
+- haven reads SPSS, Stata, and SAS files
+- readxl reads excel files (both .xls and .xlsx)
+- DBI, along with a database specific backend (e.g. RMySQL, RSQLite, RPostgreSQL etc) allows you to run SQL queries against a database and return a data frame.
+
+For hierarchical data: use jsonlite (by Jeroen Ooms) for json, and xml2 for XML.
+
+# Tiday Data
+There are three interrelated rules which make a dataset tidy:
+
+- Each variable must have its own column.
+- Each observation must have its own row.
+- Each value must have its own cell.
+
+
+This means for most real analyses, you’ll need to do some tidying. The first step is always to figure out what the variables and observations are. Sometimes this is easy; other times you’ll need to consult with the people who originally generated the data. The second step is to resolve one of two common problems:
+
+- One variable might be spread across multiple columns.
+
+- One observation might be scattered across multiple rows.
+
+Typically a dataset will only suffer from one of these problems; it’ll only suffer from both if you’re really unlucky! To fix these problems, you’ll need the two most important functions in tidyr: pivot_longer() and pivot_wider().
+
+## Pivot Longer
+
+```{r}
+table4a
+```
+A common problem is a dataset where some of the column names are not names of variables, but values of a variable. To tidy a dataset like this, we need to pivot the offending columns into a new pair of variables. 
+
+```{r}
+table4a %>% 
+  pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "cases")
+```
+pivot_longer() makes datasets longer by increasing the number of rows and decreasing the number of columns. 
+```{r}
+table4b
+```
+```{r}
+table4b %>%
+        pivot_longer(c("1999","2000"),names_to = "year",values_to = "population")
+```
+
+To combine the tidied versions of table4a and table4b into a single tibble, we need to use dplyr::left_join(), which you’ll learn about in relational data.
+
+```{r}
+tidy4a <- table4a %>% 
+  pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "cases")
+tidy4b <- table4b %>% 
+  pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "population")
+left_join(tidy4a, tidy4b)
+```
+## Wider
+
+pivot_wider() is the opposite of pivot_longer(). You use it when an observation is scattered across multiple rows. For example, take table2: an observation is a country in a year, but each observation is spread across two rows.
+
+```{r}
+table2
+```
+```{r}
+table2 %>%
+    pivot_wider(names_from = type, values_from = count)
+```
+
+
+## separating and uniting
+
+separate() pulls apart one column into multiple columns, by splitting wherever a separator character appears.
+
+```{r}
+table3
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"))
+```
+By default, separate() will split values wherever it sees a non-alphanumeric character. If you wish to use a specific character to separate a column, you can pass the character to the sep argument of separate().This is the default behaviour in separate(): it leaves the type of the column as is. Here, however, it’s not very useful as those really are numbers. We can ask separate() to try and convert to better types using convert = TRUE:
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"), convert = TRUE)
+```
+
+unite() is the inverse of separate(): it combines multiple columns into a single column. 
+
+```{r}
+table5 %>% 
+  unite(new, century, year, sep = "")
+```
+
+## Missing Values
+
+```{r}
+stocks <- tibble(
+  year   = c(2015, 2015, 2015, 2015, 2016, 2016, 2016),
+  qtr    = c(   1,    2,    3,    4,    2,    3,    4),
+  return = c(1.88, 0.59, 0.35,   NA, 0.92, 0.17, 2.66)
+)
+stocks
+```
+The return is explicit missing value and the 1st quarter of 2016 is the implicit missing value
+
+
+pivot_longer() and pivot_wider() can make implicit missing value to be explicit. 
+```{r}
+stocks %>% 
+  pivot_wider(names_from = year, values_from = return)
+```
+Another important tool for making missing values explicit in tidy data is complete(). complete() takes a set of columns, and finds all unique combinations. It then ensures the original dataset contains all those values, filling in explicit NAs where necessary.
+```{r}
+stocks %>% 
+  complete(year, qtr)
+```
+
+There’s one other important tool that you should know for working with missing values. You can fill in these missing values with fill(). It takes a set of columns where you want missing values to be replaced by the most recent non-missing value (sometimes called last observation carried forward).
+
+
+## Case Study
+```{r}
+who
+```
+```{r}
+who1 <- who %>% 
+  pivot_longer(
+    cols = new_sp_m014:newrel_f65, 
+    names_to = "key", 
+    values_to = "cases", 
+    values_drop_na = TRUE
+  )
+who1
+```
+```{r}
+who2 <- who1 %>% 
+  mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
+who2
+```
+```{r}
+who3 <- who2 %>% 
+  separate(key, c("new", "type", "sexage"), sep = "_")
+who3
+```
+
+```{r}
+who4 <- who3 %>% 
+  select(-new, -iso2, -iso3)
+
+who5 <- who4 %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+who5
+```
+
+```{r}
+who %>%
+  pivot_longer(
+    cols = new_sp_m014:newrel_f65, 
+    names_to = "key", 
+    values_to = "cases", 
+    values_drop_na = TRUE
+  ) %>% 
+  mutate(
+    key = stringr::str_replace(key, "newrel", "new_rel")
+  ) %>%
+  separate(key, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+```
+
+
+
